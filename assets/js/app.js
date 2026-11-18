@@ -107,7 +107,7 @@
     var status = el('p', { class: 'form-status', role: 'status', 'aria-live': 'polite' });
     var submit = el('button', { type: 'submit', class: 'btn btn-wide', text: prev ? 'Update RSVP' : 'Send RSVP' });
     var form = el('form', { class: 'rsvp-form', novalidate: true, onsubmit: onSubmit }, rows.concat([
-      el('div', { class: 'field' }, [el('label', { for: 'email', class: 'field-label' }, ['Email ', el('span', { class: 'optional', text: '(optional — for a confirmation)' })]), email]),
+      el('div', { class: 'field' }, [el('label', { for: 'email', class: 'field-label' }, ['Email ', el('span', { class: 'optional', text: '(optional — we’ll email you a confirmation)' })]), email]),
       el('div', { class: 'field' }, [el('label', { for: 'message', class: 'field-label' }, ['Message ', el('span', { class: 'optional', text: '(optional)' })]), msg]),
       status, submit
     ]));
@@ -175,7 +175,14 @@
     var sc = seatBadge(inv.guests.length); sc.classList.add('seat-card-small'); nodes.push(sc);
     nodes.push(chips);
     if (opts.justSent && r.message) nodes.push(el('blockquote', { class: 'note' }, [multiline(r.message)]));
-    if (opts.emailSent) nodes.push(el('p', { class: 'small', text: 'A confirmation has been sent to ' + r.email + '.' }));
+    if (opts.emailSent) {
+      var from = (CFG.names || []).join(' & ') || 'us';
+      nodes.push(el('p', { class: 'small email-note' }, [
+        'A confirmation from ' + from + ' is on its way to ', el('strong', { text: r.email }), '. ',
+        'If it’s not in your inbox in a few minutes, please check your ', el('strong', { text: 'Spam' }), ' or ', el('strong', { text: 'Promotions' }),
+        ' folder and mark it “Not spam”.'
+      ]));
+    }
     nodes.push(d.closed
       ? el('p', { class: 'small muted', text: 'RSVPs are now closed. If something has changed, please contact us directly.' })
       : el('p', { class: 'small muted' }, [
