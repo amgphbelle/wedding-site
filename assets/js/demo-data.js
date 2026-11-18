@@ -262,6 +262,12 @@ window.WEDDING_DEMO_DATA = {
    }
   ]
  },
+ "couple": {
+  "names": ["Paolo", "Margaret"],
+  "full": "Paolo & Margaret",
+  "dateText": "February 06, 2027",
+  "place": "Tagaytay City"
+ },
  "deadline": "2027-01-06",
  "deadlineText": "January 6, 2027",
  "seatNote": "Our celebration is intimate, so we’ve reserved seats only for the guests named below."

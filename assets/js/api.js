@@ -52,6 +52,7 @@
       var out = {
         ok: true,
         invite: { code: inv.code, party: inv.party, email: inv.email || '', guests: inv.guests.map(function (g) { return { name: g }; }) },
+        couple: s.couple || window.WEDDING_DEMO_DATA.couple,
         seatNote: s.seatNote || '',
         response: resp, deadline: s.deadline, deadlineText: s.deadlineText, closed: false,
         details: s.details

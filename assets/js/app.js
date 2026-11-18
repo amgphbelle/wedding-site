@@ -1,4 +1,4 @@
-/* Wedding site: invitation code → RSVP → details (only after a Yes). */
+/* Wedding site: invitation code → RSVP card + details. Names, date and place appear only once a code checks out. */
 (function () {
   var CFG = window.WEDDING_CONFIG || {};
   var API = window.WeddingAPI;
@@ -326,9 +326,11 @@
     renderLoading();
     API.invite(state.code).then(function (res) {
       if (!res.ok) {
+        splashReady(false);
         if (res.error === 'busy') return renderError('Our RSVP page is taking a short break. Please try again in about 10 minutes.', 'Just a moment');
         if (res.error === 'not_found') {
           forget();
+          hideCouple();
           renderDetails(null);
           return renderCodeEntry('We couldn’t find that invitation code. Please check the link we sent you.');
         }
@@ -336,17 +338,19 @@
       }
       state.data = res;
       state.code = res.invite.code;
+      showCouple(res.couple);
+      splashReady(!!(res.couple && res.couple.names && res.couple.names.length));
       remember(state.code);
       if (!/[?&]preview=1/.test(location.search) && API.visit) API.visit(state.code);   // background; previews from the dashboard aren't counted
       if (res.deadlineText) setDeadline(res.deadlineText);
       renderSummaryOrClosed();
       renderDetails(res.details || null);
-    }).catch(function () { renderError(); });
+    }).catch(function () { splashReady(false); renderError(); });
   }
 
   function switchCode(e) {
     if (e) e.preventDefault();
-    forget(); state.data = null; renderDetails(null); renderCodeEntry(); updateFloat();
+    forget(); state.data = null; hideCouple(); renderDetails(null); renderCodeEntry(); updateFloat();
     var input = document.getElementById('code'); if (input) input.focus();
   }
   function remember(code) {
@@ -374,28 +378,129 @@
     n.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'start' });
   }
 
+  /* ---------- names, date and place (only once a code checks out) ---------- */
+  var DEFAULT_TITLE = document.title;
+  function setText(id, t) { var n = document.getElementById(id); if (n) n.textContent = t || ''; }
+  function showCouple(c) {
+    var names = (c && c.names) || [];
+    if (!names.length) { hideCouple(); return; }   // nothing set in the Sheet yet
+    var full = c.full || names.join(' & '), two = names.length > 1;
+    setText('name-1', names[0]); setText('name-2', two ? names[1] : '');
+    setText('splash-name-1', names[0]); setText('splash-name-2', two ? names[1] : '');
+    ['amp', 'splash-amp'].forEach(function (id) { var n = document.getElementById(id); if (n) n.hidden = !two; });
+    setText('date-text', c.dateText); setText('splash-date', c.dateText);
+    setText('city-text', c.place); setText('splash-place', c.place);
+    setText('footer-text', [full, c.dateText].filter(Boolean).join(' · '));
+    document.title = [full, c.dateText].filter(Boolean).join(' · ');
+    document.getElementById('hero').classList.remove('locked');
+  }
+  function hideCouple() {
+    ['name-1', 'name-2', 'date-text', 'city-text', 'footer-text', 'splash-name-1', 'splash-name-2', 'splash-date', 'splash-place']
+      .forEach(function (id) { setText(id, ''); });
+    document.getElementById('hero').classList.add('locked');
+    document.title = DEFAULT_TITLE;
+  }
+
+  /* ---------- monogram loading screen ----------
+     The monogram starts writing itself on a full screen while the invitation loads. Once we know
+     whether the code is good, the screen fades and the monogram glides into its place at the top,
+     still writing, so nobody waits for the drawing to finish. Once per visit; tap or a key skips it. */
+  var SPLASH_KEY = 'wedding-splash-seen';
+  var SPLASH_MIN = 1500, CAPTION_AT = 900, CAPTION_HOLD = 1800, SLOW_AT = 4000, GIVE_UP = 11000;
+  var splash = null;
+  function now() { return window.performance && performance.now ? performance.now() : Date.now(); }
+  function startSplash() {
+    var node = document.getElementById('splash');
+    if (!node) return;
+    if (!document.documentElement.classList.contains('splash-on')) { node.parentNode.removeChild(node); return; }
+    try { sessionStorage.setItem(SPLASH_KEY, '1'); } catch (e) {}
+    splash = { node: node, t0: now(), timers: [], settled: false, done: false };
+    document.body.classList.add('no-scroll');
+    node.addEventListener('click', function () { endSplash(true); });
+    document.addEventListener('keydown', splashKey);
+    splash.timers.push(setTimeout(function () { if (splash && !splash.settled && state.code) node.classList.add('slow'); }, SLOW_AT));
+    splash.timers.push(setTimeout(function () { endSplash(true); }, GIVE_UP));
+  }
+  function splashKey(e) {
+    if (e.key === 'Escape' || e.key === 'Enter' || e.key === ' ') { e.preventDefault(); endSplash(true); }
+  }
+  // called once we know whether the code checked out (or that there's no code)
+  function splashReady(verified) {
+    if (!splash || splash.done || splash.settled) return;
+    var sp = splash, t = now() - sp.t0, wait;
+    sp.settled = true;
+    sp.node.classList.remove('slow');
+    if (verified) {
+      var showAt = Math.max(t, CAPTION_AT);
+      sp.timers.push(setTimeout(function () { sp.node.classList.add('verified'); }, showAt - t));
+      wait = showAt + (t > 3000 ? CAPTION_HOLD * 0.65 : CAPTION_HOLD) - t;   // shorter if they've already waited
+    } else {
+      wait = Math.max(0, SPLASH_MIN - t);
+    }
+    sp.timers.push(setTimeout(function () { endSplash(false); }, wait));
+  }
+  function whenFontsReady(fn) {
+    var called = false;
+    function go() { if (!called) { called = true; fn(); } }
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(go, go);
+    setTimeout(go, 300);
+  }
+  function endSplash(skipped) {
+    if (!splash || splash.done) return;
+    var sp = splash, node = sp.node;
+    sp.done = true;
+    sp.timers.forEach(clearTimeout);
+    document.removeEventListener('keydown', splashKey);
+    var canvas = document.getElementById('monogram'), fallback = document.getElementById('monogram-fallback');
+    var spot = fallback.parentNode;
+    var drawing = canvas && !canvas.hidden && canvas.parentNode !== spot;
+    var dur = skipped ? 550 : 1000;
+    function finish() {
+      if (canvas) {
+        if (canvas.parentNode !== spot) spot.insertBefore(canvas, fallback);
+        canvas.style.transition = canvas.style.transform = canvas.style.transformOrigin = '';
+        if (!canvas.hidden) fallback.hidden = true;
+      }
+      fallback.style.visibility = '';
+      if (node.parentNode) node.parentNode.removeChild(node);
+      document.documentElement.classList.remove('splash-on');
+      document.body.classList.remove('no-scroll');
+      splash = null;
+    }
+    node.querySelector('.splash-bg').style.transitionDuration = Math.round(dur * 0.75) + 'ms';
+    node.classList.add('leaving');
+    if (!drawing) { setTimeout(finish, dur * 0.75); return; }
+    whenFontsReady(function () {
+      var a = canvas.getBoundingClientRect(), b = fallback.getBoundingClientRect();
+      canvas.style.transformOrigin = '0 0';
+      canvas.style.transition = 'transform ' + dur + 'ms cubic-bezier(.6, 0, .3, 1)';
+      void canvas.offsetWidth;
+      canvas.style.transform = 'translate(' + (b.left - a.left) + 'px, ' + (b.top - a.top) + 'px) scale(' + (b.width / a.width) + ')';
+      setTimeout(finish, dur + 40);
+    });
+  }
+
   /* ---------- monogram ---------- */
   function startMonogram() {
     var canvas = document.getElementById('monogram');
     var fallback = document.getElementById('monogram-fallback');
     if (!canvas || !window.MonogramPlayer || !window.MONOGRAM_DATA) return;
+    var spot = fallback.parentNode, mark = splash && splash.node.querySelector('.splash-mark');
+    if (mark) { mark.appendChild(canvas); fallback.style.visibility = 'hidden'; }   // keep its place so the glide knows where to land
     var player = new MonogramPlayer(canvas, window.MONOGRAM_DATA);
     player.load().then(function () {
-      fallback.hidden = true; canvas.hidden = false;
+      canvas.hidden = false;
+      if (canvas.parentNode === spot) fallback.hidden = true; else canvas.parentNode.classList.add('drawing');
       var reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
       if (reduce) player.showFinal(); else player.play();
-      canvas.addEventListener('click', function () { player.play(); });
-    }).catch(function () { /* keep the static image */ });
+      canvas.addEventListener('click', function () { if (!splash) player.play(); });
+    }).catch(function () {   // keep the static image
+      if (canvas.parentNode !== spot) { canvas.parentNode.classList.add('failed'); spot.insertBefore(canvas, fallback); }
+    });
   }
 
   /* ---------- start ---------- */
   function init() {
-    if (CFG.names) {
-      document.getElementById('name-1').textContent = CFG.names[0];
-      document.getElementById('name-2').textContent = CFG.names[1];
-    }
-    if (CFG.dateText) document.getElementById('date-text').textContent = CFG.dateText;
-    if (CFG.cityText) document.getElementById('city-text').textContent = CFG.cityText;
     if (CFG.rsvpDeadlineText) setDeadline(CFG.rsvpDeadlineText);
 
     if (API.isDemo) {
@@ -408,11 +513,12 @@
         e.preventDefault(); API.reset(); switchCode();
       });
     }
+    startSplash();
     startMonogram();
     var params = new URLSearchParams(location.search);
     var code = params.get('c') || params.get('code');
     if (!code) { try { code = localStorage.getItem(CODE_KEY); } catch (e) {} }
-    if (code) load(code); else renderCodeEntry();
+    if (code) load(code); else { renderCodeEntry(); splashReady(false); }
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
 })();

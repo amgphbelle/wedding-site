@@ -8,10 +8,9 @@
 window.WEDDING_CONFIG = {
   apiUrl: 'https://script.google.com/macros/s/AKfycbxq63x2tbT-8Tw-YRfUWb5LkO1ghd_Hqm00NxSAgQwCAdqTLy-D53LvfhfUKDM0M4m1qw/exec',
 
-  // Shown to everyone before they RSVP
-  names: ['Paolo', 'Margaret'],
-  dateText: 'February 06, 2027',
-  cityText: 'Tagaytay City',
+  // Your names, date and place come from the Settings tab of your Sheet and only
+  // appear once a guest's code checks out, so they aren't stored here.
+
   // Only used until a guest's code is checked; after that the deadline comes from your Sheet.
   rsvpDeadlineText: 'January 6, 2027'
 };
