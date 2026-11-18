@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Paolo &amp; Margaret · February 06, 2027</title>
+  <meta name="description" content="Paolo & Margaret are getting married on February 06, 2027 in Tagaytay City. Kindly RSVP.">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="theme-color" content="#F5F0F0">
+  <meta property="og:title" content="Paolo & Margaret · February 06, 2027">
+  <meta property="og:description" content="We’re getting married in Tagaytay City. Kindly RSVP.">
+  <meta property="og:type" content="website">
+  <meta property="og:image" content="https://amgphbelle.github.io/wedding-site/assets/img/og-image.jpg">
+  <meta property="og:url" content="https://amgphbelle.github.io/wedding-site/">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="icon" type="image/png" href="assets/img/favicon.png">
+  <link rel="apple-touch-icon" href="assets/img/apple-touch-icon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Pinyon+Script&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+  <div class="satin" aria-hidden="true"></div>
+
+  <div id="demo-bar" class="demo-bar" hidden>
+    <strong>Demo mode</strong> — sample invitations:
+    <a href="?c=DEMO01" data-code="DEMO01">DEMO01 (2 seats)</a>
+    <a href="?c=DEMO02" data-code="DEMO02">DEMO02</a>
+    <a href="?c=DEMO03" data-code="DEMO03">DEMO03 (replied yes)</a>
+    <a href="?c=DEMO04" data-code="DEMO04">DEMO04 (replied no)</a>
+    · <a href="#" id="demo-reset">reset demo</a>
+  </div>
+
+  <header class="hero">
+    <img class="corner corner-tl" src="assets/img/pisces.svg" alt="">
+    <img class="corner corner-br" src="assets/img/leo.svg" alt="">
+    <div class="hero-inner">
+      <div class="hero-text">
+        <h1 class="names">
+          <span class="name" id="name-1">Paolo</span><span class="amp" aria-label="and">&amp;</span>
+          <span class="name name-2" id="name-2">Margaret</span>
+        </h1>
+        <p class="date" id="date-text">February 06, 2027</p>
+        <p class="city" id="city-text">Tagaytay City</p>
+      </div>
+      <div class="hero-rule" aria-hidden="true"></div>
+      <div class="hero-mark">
+        <canvas id="monogram" class="monogram" width="720" height="720" role="img" aria-label="P and M monogram" title="Play again" hidden></canvas>
+        <img id="monogram-fallback" class="monogram" src="assets/img/monogram.png" alt="P and M monogram">
+      </div>
+    </div>
+    <p class="deadline">Kindly respond by <span id="deadline-text">January 6, 2027</span></p>
+  </header>
+
+  <main>
+    <section id="rsvp-card" class="card" aria-live="polite"></section>
+    <section id="details" class="details" hidden></section>
+  </main>
+
+  <a id="rsvp-float" class="rsvp-float" href="#rsvp-card" hidden>RSVP by <span id="float-deadline">January 6, 2027</span></a>
+
+  <footer class="footer">
+    <img src="assets/img/monogram.png" alt="" width="56" height="56">
+    <p>Paolo &amp; Margaret · 02.06.2027</p>
+  </footer>
+
+  <noscript><p class="noscript">This page needs JavaScript to show your invitation.</p></noscript>
+  <script src="assets/js/config.js"></script>
+  <script src="assets/js/demo-data.js"></script>
+  <script src="assets/js/api.js"></script>
+  <script src="assets/js/monogram-data.js"></script>
+  <script src="assets/js/monogram.js"></script>
+  <script src="assets/js/app.js"></script>
+</body>
+</html>
