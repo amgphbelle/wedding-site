@@ -3,12 +3,12 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <title>Paolo &amp; Margaret · February 06, 2027</title>
-  <meta name="description" content="Paolo & Margaret are getting married on February 06, 2027 in Tagaytay City. Kindly RSVP.">
+  <title>You’re invited</title>
+  <meta name="description" content="You’re invited. Kindly RSVP using the personal link we sent you.">
   <meta name="robots" content="noindex, nofollow">
   <meta name="theme-color" content="#F5F0F0">
-  <meta property="og:title" content="Paolo & Margaret · February 06, 2027">
-  <meta property="og:description" content="We’re getting married in Tagaytay City. Kindly RSVP.">
+  <meta property="og:title" content="You’re invited">
+  <meta property="og:description" content="Kindly RSVP using your personal link.">
   <meta property="og:type" content="website">
   <meta property="og:image" content="https://amgphbelle.github.io/wedding-site/assets/img/og-image.jpg">
   <meta property="og:url" content="https://amgphbelle.github.io/wedding-site/">
@@ -19,9 +19,34 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Pinyon+Script&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="assets/css/style.css">
+  <script>
+    // Show the monogram loading screen once per visit (add ?splash=1 to see it again).
+    (function () {
+      try {
+        var force = /[?&]splash=1/.test(location.search);
+        var calm = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+        if (force || (!calm && !sessionStorage.getItem('wedding-splash-seen'))) document.documentElement.classList.add('splash-on');
+      } catch (e) {}
+    })();
+  </script>
 </head>
 <body>
   <div class="satin" aria-hidden="true"></div>
+
+  <div id="splash" class="splash" aria-hidden="true">
+    <div class="splash-bg"></div>
+    <div class="splash-stage">
+      <div class="splash-mark"><img class="splash-ghost monogram" src="assets/img/monogram.png" alt=""></div>
+      <div class="splash-caption">
+        <p class="splash-names"><span id="splash-name-1"></span><span class="splash-amp" id="splash-amp">&amp;</span><span id="splash-name-2"></span></p>
+        <span class="splash-rule"></span>
+        <p class="splash-date" id="splash-date"></p>
+        <p class="splash-place" id="splash-place"></p>
+      </div>
+      <p class="splash-status" id="splash-status">Finding your invitation…</p>
+    </div>
+    <p class="splash-skip">Tap to skip</p>
+  </div>
 
   <div id="demo-bar" class="demo-bar" hidden>
     <strong>Demo mode</strong> — sample invitations:
@@ -32,17 +57,18 @@
     · <a href="#" id="demo-reset">reset demo</a>
   </div>
 
-  <header class="hero">
+  <header class="hero locked" id="hero">
     <img class="corner corner-tl" src="assets/img/pisces.svg" alt="">
     <img class="corner corner-br" src="assets/img/leo.svg" alt="">
     <div class="hero-inner">
       <div class="hero-text">
+        <!-- filled in from your Sheet once a guest's code checks out -->
         <h1 class="names">
-          <span class="name" id="name-1">Paolo</span><span class="amp" aria-label="and">&amp;</span>
-          <span class="name name-2" id="name-2">Margaret</span>
+          <span class="name" id="name-1"></span><span class="amp" id="amp" aria-label="and">&amp;</span>
+          <span class="name name-2" id="name-2"></span>
         </h1>
-        <p class="date" id="date-text">February 06, 2027</p>
-        <p class="city" id="city-text">Tagaytay City</p>
+        <p class="date" id="date-text"></p>
+        <p class="city" id="city-text"></p>
       </div>
       <div class="hero-rule" aria-hidden="true"></div>
       <div class="hero-mark">
@@ -62,7 +88,7 @@
 
   <footer class="footer">
     <img src="assets/img/monogram.png" alt="" width="56" height="56">
-    <p>Paolo &amp; Margaret · 02.06.2027</p>
+    <p id="footer-text"></p>
   </footer>
 
   <noscript><p class="noscript">This page needs JavaScript to show your invitation.</p></noscript>
