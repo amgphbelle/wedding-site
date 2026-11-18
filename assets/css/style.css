@@ -64,6 +64,48 @@ a { color: var(--burgundy); }
 .hero-mark { justify-self: start; }
 .monogram { display: block; width: clamp(240px, 32vw, 380px); height: auto; aspect-ratio: 1; cursor: pointer; }
 
+/* before a code checks out: monogram only, no names, date or place */
+.hero.locked .hero-inner { grid-template-columns: 1fr; }
+.hero.locked .hero-text, .hero.locked .hero-rule { display: none; }
+.hero.locked .hero-mark { justify-self: center; }
+.hero:not(.locked) .hero-text { animation: fade-up .8s ease both; }
+html.splash-on .hero .hero-text { animation: none; opacity: 0; }   /* appear once the monogram has landed */
+.footer p:empty { display: none; }
+@keyframes fade-up { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+
+/* ---------- monogram loading screen ---------- */
+.splash { display: none; }
+html.splash-on .splash {
+  display: block; position: fixed; inset: 0; z-index: 100; cursor: pointer;
+  animation: splash-give-up .4s 14s forwards;   /* never trap anyone if something goes wrong */
+}
+.splash-bg { position: absolute; inset: 0; background: radial-gradient(120% 90% at 30% 20%, var(--pearl-hi), var(--pearl) 60%, #EDE4E4); transition: opacity .7s ease; }
+.splash-stage {
+  position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center;
+  padding: 24px; text-align: center;
+}
+.splash-mark { position: relative; }
+.splash-mark .monogram { width: min(58vw, 40vh, 320px); cursor: inherit; }
+.splash-ghost { opacity: .1; transition: opacity .8s ease; }
+.splash-mark canvas { position: absolute; inset: 0; }
+.splash-mark.drawing .splash-ghost { opacity: 0; }
+.splash-mark.failed .splash-ghost { opacity: 1; }
+.splash-caption { min-height: 150px; margin-top: 18px; opacity: 0; transform: translateY(8px); transition: opacity .9s ease, transform .9s ease; }
+.splash.verified .splash-caption { opacity: 1; transform: none; }
+.splash-names { margin: 0; font-family: var(--script); color: var(--burgundy); font-size: clamp(40px, 6vw, 56px); line-height: 1.1; }
+.splash-amp { margin: 0 .22em; }
+.splash-rule { display: block; width: 72px; height: 1px; margin: 12px auto 10px; background: var(--gold-deep); }
+.splash-date { margin: 0; color: var(--coral); text-transform: uppercase; font-weight: 500; font-size: clamp(18px, 2.4vw, 22px); letter-spacing: .08em; }
+.splash-place { margin: 2px 0 0; font-family: var(--script); color: var(--coral); font-size: clamp(24px, 3vw, 28px); }
+.splash-status { position: absolute; left: 0; right: 0; bottom: 18%; margin: 0; color: var(--muted); font-style: italic; opacity: 0; transition: opacity .6s ease; }
+.splash.slow .splash-status { opacity: 1; }
+.splash-skip { position: absolute; left: 0; right: 0; bottom: max(18px, env(safe-area-inset-bottom)); margin: 0; text-align: center;
+  font-size: 13px; letter-spacing: .24em; text-transform: uppercase; color: var(--muted); opacity: .55; }
+.splash.leaving { pointer-events: none; }
+.splash.leaving .splash-bg { opacity: 0; }
+.splash.leaving .splash-caption, .splash.leaving .splash-status, .splash.leaving .splash-skip, .splash.leaving .splash-ghost { opacity: 0; transition: opacity .35s ease; }
+@keyframes splash-give-up { to { opacity: 0; visibility: hidden; } }
+
 .names { margin: 0; font-family: var(--script); font-weight: 400; color: var(--burgundy); line-height: .95; }
 .names .name { font-size: clamp(64px, 9vw, 112px); }
 .names .amp { font-size: clamp(64px, 9vw, 112px); margin-left: .06em; font-weight: 700; -webkit-text-stroke: .6px var(--burgundy); }
