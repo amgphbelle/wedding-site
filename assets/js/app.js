@@ -213,10 +213,10 @@
   }
   floatBtn.addEventListener('click', function (e) { e.preventDefault(); scrollToEl(card); });
 
-  function renderError() {
+  function renderError(message, title) {
     show([
-      el('h2', { class: 'card-title', text: 'Something went wrong' }), ornament(),
-      el('p', { class: 'lead', text: 'We couldn’t reach our RSVP service. Please check your connection and try again.' }),
+      el('h2', { class: 'card-title', text: title || 'Something went wrong' }), ornament(),
+      el('p', { class: 'lead', text: typeof message === 'string' ? message : 'We couldn’t reach our RSVP service. Please check your connection and try again.' }),
       el('div', { class: 'actions' }, [el('button', { type: 'button', class: 'btn', text: 'Try again', onclick: function () { load(state.code); } })])
     ]);
   }
@@ -319,6 +319,7 @@
     renderLoading();
     API.invite(state.code).then(function (res) {
       if (!res.ok) {
+        if (res.error === 'busy') return renderError('Our RSVP page is taking a short break. Please try again in about 10 minutes.', 'Just a moment');
         if (res.error === 'not_found') {
           forget();
           renderDetails(null);
@@ -332,7 +333,7 @@
       if (res.deadlineText) setDeadline(res.deadlineText);
       renderSummaryOrClosed();
       renderDetails(res.details || null);
-    }).catch(renderError);
+    }).catch(function () { renderError(); });
   }
 
   function switchCode(e) {
@@ -356,6 +357,7 @@
     return ({
       incomplete: 'Please choose an answer for everyone.',
       bad_email: 'That email address doesn’t look right.',
+      busy: 'Our RSVP page is taking a short break. Please try again in about 10 minutes.',
       not_found: 'This invitation code is no longer valid.'
     })[code] || 'Something went wrong. Please try again.';
   }
