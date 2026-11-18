@@ -46,18 +46,30 @@
   }
 
   /* ---------- states ---------- */
-  function renderCodeEntry(message) {
+  // badCode: a code that didn't check out. It goes back in the box and in the message so the guest can spot a typo.
+  function renderCodeEntry(message, badCode, focus) {
     var input = el('input', { id: 'code', type: 'text', inputmode: 'text', autocomplete: 'off', autocapitalize: 'characters', spellcheck: 'false', maxlength: '12', placeholder: 'Your code', 'aria-describedby': 'code-help' });
-    var form = el('form', { class: 'code-form', onsubmit: function (e) { e.preventDefault(); var c = input.value.trim(); if (c) load(c); } }, [
+    var shown = '';
+    if (badCode) {
+      shown = String(badCode).trim().toUpperCase();
+      if (shown.length > 24) shown = shown.slice(0, 24) + '…';
+      input.value = shown;
+      input.setAttribute('aria-invalid', 'true');
+      var picked = false;
+      input.addEventListener('focus', function () { if (!picked) { picked = true; input.select(); } });   // easy to fix or type over
+    }
+    var form = el('form', { class: 'code-form', onsubmit: function (e) { e.preventDefault(); var c = input.value.trim(); if (c) load(c, true); } }, [
       el('label', { for: 'code', class: 'field-label', text: 'Invitation code' }),
       el('div', { class: 'code-row' }, [input, el('button', { type: 'submit', class: 'btn', text: 'Continue' })])
     ]);
     show([
       el('h2', { class: 'card-title', text: 'RSVP' }), ornament(),
       el('p', { id: 'code-help', class: 'lead', text: 'Please open the personal link we sent you, or enter the invitation code from it.' }),
-      message ? el('p', { class: 'alert', role: 'alert', text: message }) : null,
+      badCode ? el('p', { class: 'alert', role: 'alert' }, ['We couldn’t find the code ', el('strong', { class: 'bad-code' + (shown.length > 12 ? ' long' : ''), text: shown }), '. Please check it against your invitation.'])
+        : message ? el('p', { class: 'alert', role: 'alert', text: message }) : null,
       form
     ]);
+    if (badCode && focus) { input.focus(); input.select(); }
   }
 
   function renderLoading() {
@@ -321,7 +333,7 @@
   function closeLightbox() { if (lightbox) { lightbox.hidden = true; document.body.classList.remove('no-scroll'); } }
 
   /* ---------- flow ---------- */
-  function load(code) {
+  function load(code, typed) {
     state.code = String(code || '').trim();
     renderLoading();
     API.invite(state.code).then(function (res) {
@@ -332,7 +344,7 @@
           forget();
           hideCouple();
           renderDetails(null);
-          return renderCodeEntry('We couldn’t find that invitation code. Please check the link we sent you.');
+          return renderCodeEntry('', state.code, typed);   // focus the box only if they typed it; on a phone that opens the keyboard
         }
         return renderError();
       }
