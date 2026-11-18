@@ -102,7 +102,7 @@
       ]);
     });
     var email = el('input', { id: 'email', type: 'email', autocomplete: 'email', maxlength: '120', placeholder: 'you@example.com', value: (prev && prev.email) || inv.email || '' });
-    var msg = el('textarea', { id: 'message', rows: '3', maxlength: '1000', placeholder: 'A note for ' + ((CFG.names || []).join(' & ') || 'the couple') });
+    var msg = el('textarea', { id: 'message', rows: '3', maxlength: '1000', placeholder: 'A note for ' + (coupleNames() || 'the couple') });
     msg.value = (prev && prev.message) || '';
     var status = el('p', { class: 'form-status', role: 'status', 'aria-live': 'polite' });
     var submit = el('button', { type: 'submit', class: 'btn btn-wide', text: prev ? 'Update RSVP' : 'Send RSVP' });
@@ -176,7 +176,7 @@
     nodes.push(chips);
     if (opts.justSent && r.message) nodes.push(el('blockquote', { class: 'note' }, [multiline(r.message)]));
     if (opts.emailSent) {
-      var from = (CFG.names || []).join(' & ') || 'us';
+      var from = coupleNames() || 'us';
       nodes.push(el('p', { class: 'small email-note' }, [
         'A confirmation from ' + from + ' is on its way to ', el('strong', { text: r.email }), '. ',
         'If it’s not in your inbox in a few minutes, please check your ', el('strong', { text: 'Spam' }), ' or ', el('strong', { text: 'Promotions' }),
@@ -342,7 +342,7 @@
       splashReady(!!(res.couple && res.couple.names && res.couple.names.length));
       remember(state.code);
       if (!/[?&]preview=1/.test(location.search) && API.visit) API.visit(state.code);   // background; previews from the dashboard aren't counted
-      if (res.deadlineText) setDeadline(res.deadlineText);
+      setDeadline(res.deadlineText || '');
       renderSummaryOrClosed();
       renderDetails(res.details || null);
     }).catch(function () { splashReady(false); renderError(); });
@@ -361,9 +361,10 @@
     try { localStorage.removeItem(CODE_KEY); } catch (e) {}
     try { var u = new URL(location.href); u.searchParams.delete('c'); u.searchParams.delete('code'); history.replaceState(null, '', u); } catch (e) {}
   }
-  function currentDeadline() { return (state.data && state.data.deadlineText) || CFG.rsvpDeadlineText || 'the deadline'; }
+  function currentDeadline() { return (state.data && state.data.deadlineText) || 'the deadline'; }
   function setDeadline(t) {
-    ['deadline-text', 'float-deadline'].forEach(function (id) { var n = document.getElementById(id); if (n) n.textContent = t; });
+    ['deadline-text', 'float-deadline'].forEach(function (id) { var n = document.getElementById(id); if (n) n.textContent = t || ''; });
+    var line = document.getElementById('deadline-line'); if (line) line.hidden = !t;   // only shown once a code checks out
   }
   function errorText(code) {
     return ({
@@ -394,10 +395,15 @@
     document.title = [full, c.dateText].filter(Boolean).join(' · ');
     document.getElementById('hero').classList.remove('locked');
   }
+  function coupleNames() {
+    var c = state.data && state.data.couple;
+    return c ? (c.full || (c.names || []).join(' & ')) : '';
+  }
   function hideCouple() {
     ['name-1', 'name-2', 'date-text', 'city-text', 'footer-text', 'splash-name-1', 'splash-name-2', 'splash-date', 'splash-place']
       .forEach(function (id) { setText(id, ''); });
     document.getElementById('hero').classList.add('locked');
+    setDeadline('');
     document.title = DEFAULT_TITLE;
   }
 
@@ -501,7 +507,6 @@
 
   /* ---------- start ---------- */
   function init() {
-    if (CFG.rsvpDeadlineText) setDeadline(CFG.rsvpDeadlineText);
 
     if (API.isDemo) {
       var bar = document.getElementById('demo-bar');

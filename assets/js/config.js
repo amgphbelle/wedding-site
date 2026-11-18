@@ -6,11 +6,8 @@
  *         sample guests, so you can try everything without any setup.
  */
 window.WEDDING_CONFIG = {
-  apiUrl: 'https://script.google.com/macros/s/AKfycbxq63x2tbT-8Tw-YRfUWb5LkO1ghd_Hqm00NxSAgQwCAdqTLy-D53LvfhfUKDM0M4m1qw/exec',
+  apiUrl: 'https://script.google.com/macros/s/AKfycbxq63x2tbT-8Tw-YRfUWb5LkO1ghd_Hqm00NxSAgQwCAdqTLy-D53LvfhfUKDM0M4m1qw/exec'
 
-  // Your names, date and place come from the Settings tab of your Sheet and only
-  // appear once a guest's code checks out, so they aren't stored here.
-
-  // Only used until a guest's code is checked; after that the deadline comes from your Sheet.
-  rsvpDeadlineText: 'January 6, 2027'
+  // Your names, date, place and RSVP deadline come from the Settings tab of your
+  // Sheet and only appear once a guest's code checks out, so they aren't stored here.
 };
