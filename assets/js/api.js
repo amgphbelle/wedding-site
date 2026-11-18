@@ -21,6 +21,7 @@
     invite: function (code) { return get({ action: 'invite', code: code }); },
     rsvp: function (payload) { payload.action = 'rsvp'; return post(payload); },
     admin: function (token) { return post({ action: 'admin', token: token }); },
+    activity: function (token, code) { return post({ action: 'activity', token: token, code: code || '' }); },
     image: function (code, id) { return get({ action: 'image', code: code, id: id }); },
     // fire-and-forget: the page never waits for this
     visit: function (code) {
@@ -72,6 +73,10 @@
       var email = String(p.email || '').trim();
       if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return later({ ok: false, error: 'bad_email' });
       var resp = { guests: guests, email: email, message: String(p.message || '').trim().slice(0, 1000), updated: new Date().toISOString() };
+      s.log = s.log || [];
+      s.log.push({ type: 'rsvp', time: resp.updated, code: inv.code, party: inv.party, kind: s.responses[inv.code] ? 'Updated' : 'New',
+        summary: guests.map(function (g) { return g.name + ': ' + (g.attending === 'yes' ? 'Yes' : 'No'); }).join('; '),
+        email: email, message: resp.message });
       s.responses[inv.code] = resp; save(s);
       return later({ ok: true, response: resp, emailSent: !!email, deadline: s.deadline, deadlineText: s.deadlineText, details: s.details });
     },
@@ -80,7 +85,9 @@
       if (!inv) return;
       s.visits = s.visits || {};
       var now = new Date().toISOString(), v = s.visits[inv.code] || { count: 0, first: now, last: now };
-      v.count++; v.last = now; s.visits[inv.code] = v; save(s);
+      v.count++; v.last = now; s.visits[inv.code] = v;
+      s.visitLog = s.visitLog || []; s.visitLog.push({ type: 'visit', time: now, code: inv.code, party: inv.party });
+      save(s);
     },
     admin: function () {
       var s = load(), st = { invitations: 0, seats: 0, responded: 0, attending: 0, declined: 0, awaiting: 0 };
@@ -102,6 +109,18 @@
         var m = /^data:([^;]+);base64,(.*)$/.exec(url);
         return later({ ok: true, mime: m[1], data: m[2] });
       });
+    },
+    activity: function (token, code) {
+      var s = load(), c = clean(code);
+      // sample history for the replies that came with the demo data
+      var seeded = Object.keys(window.WEDDING_DEMO_DATA.responses).map(function (k) {
+        var r = window.WEDDING_DEMO_DATA.responses[k], inv = s.invitations.filter(function (i) { return i.code === k; })[0];
+        return { type: 'rsvp', time: r.updated, code: k, party: inv ? inv.party : k, kind: 'New', email: r.email, message: r.message,
+          summary: r.guests.map(function (g) { return g.name + ': ' + (g.attending === 'yes' ? 'Yes' : 'No'); }).join('; ') };
+      });
+      var ev = seeded.concat(s.log || [], s.visitLog || []).filter(function (e) { return !c || e.code === c; });
+      ev.sort(function (a, b) { return a.time < b.time ? 1 : a.time > b.time ? -1 : 0; });
+      return later({ ok: true, code: c, events: ev, total: ev.length, truncated: false });
     },
     reset: function () { try { localStorage.removeItem(KEY); } catch (e) {} }
   };
