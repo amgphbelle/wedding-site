@@ -116,6 +116,8 @@ main { padding: 0 16px 48px; }
 .seat-note { margin: 0 auto 14px; max-width: 28em; font-style: italic; color: var(--ink); }
 
 .small { font-size: 16px; margin: 12px 0 0; }
+.email-note { max-width: 30em; margin-left: auto; margin-right: auto; }
+.email-note strong { font-weight: 600; color: var(--burgundy); }
 .muted { color: var(--muted); }
 .alert { color: #A3242F; }
 
