@@ -337,6 +337,7 @@
       state.data = res;
       state.code = res.invite.code;
       remember(state.code);
+      if (!/[?&]preview=1/.test(location.search) && API.visit) API.visit(state.code);   // background; previews from the dashboard aren't counted
       if (res.deadlineText) setDeadline(res.deadlineText);
       renderSummaryOrClosed();
       renderDetails(res.details || null);

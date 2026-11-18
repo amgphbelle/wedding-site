@@ -21,7 +21,15 @@
     invite: function (code) { return get({ action: 'invite', code: code }); },
     rsvp: function (payload) { payload.action = 'rsvp'; return post(payload); },
     admin: function (token) { return post({ action: 'admin', token: token }); },
-    image: function (code, id) { return get({ action: 'image', code: code, id: id }); }
+    image: function (code, id) { return get({ action: 'image', code: code, id: id }); },
+    // fire-and-forget: the page never waits for this
+    visit: function (code) {
+      var body = JSON.stringify({ action: 'visit', code: code });
+      try {
+        if (navigator.sendBeacon && navigator.sendBeacon(CFG.apiUrl, new Blob([body], { type: 'text/plain;charset=utf-8' }))) return;
+      } catch (e) {}
+      try { fetch(CFG.apiUrl, { method: 'POST', mode: 'no-cors', keepalive: true, headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: body }); } catch (e) {}
+    }
   };
 
   /* ---------------- demo backend (sample data, saved in this browser) ---------------- */
@@ -67,6 +75,13 @@
       s.responses[inv.code] = resp; save(s);
       return later({ ok: true, response: resp, emailSent: !!email, deadline: s.deadline, deadlineText: s.deadlineText, details: s.details });
     },
+    visit: function (code) {
+      var s = load(), inv = find(s, code);
+      if (!inv) return;
+      s.visits = s.visits || {};
+      var now = new Date().toISOString(), v = s.visits[inv.code] || { count: 0, first: now, last: now };
+      v.count++; v.last = now; s.visits[inv.code] = v; save(s);
+    },
     admin: function () {
       var s = load(), st = { invitations: 0, seats: 0, responded: 0, attending: 0, declined: 0, awaiting: 0 };
       var list = s.invitations.map(function (inv) {
@@ -76,7 +91,7 @@
           if (r) { st.responded++; r.guests.forEach(function (g) { if (g.attending === 'yes') st.attending++; else st.declined++; }); }
           else st.awaiting += inv.guests.length;
         }
-        return { code: inv.code, party: inv.party, active: inv.active !== false, invited: inv.guests.slice(), response: r };
+        return { code: inv.code, party: inv.party, active: inv.active !== false, invited: inv.guests.slice(), response: r, visits: (s.visits || {})[inv.code] || null };
       });
       return later({ ok: true, admin: 'demo@example.com', stats: st, invitations: list, siteUrl: CFG.siteUrl || '../wedding-site/index.html', deadline: s.deadline, deadlineText: s.deadlineText, closed: false, generated: new Date().toISOString() });
     },
